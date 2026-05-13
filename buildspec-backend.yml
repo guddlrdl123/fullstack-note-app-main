@@ -10,7 +10,17 @@ phases:
   post_build:
     commands:
       - mkdir -p deploy-backend
-      - cp backend/Procfile deploy-backend/
+
+      # 1. 빌드된 JAR 파일을 deploy-backend 폴더로 복사 (이름을 Procfile과 일치시킴)
+      - cp backend/build/libs/*.jar deploy-backend/note-app.jar
+
+      # 2. backend 폴더의 Procfile을 복사 (실패 방지를 위해 경로 유연성 추가)
+      - cp backend/Procfile deploy-backend/ || cp Procfile deploy-backend/
+
+      # 3. .ebextensions 설정이 있다면 복사 (없어도 에러 안 나게 처리)
+      - "[ -d backend/.ebextensions ] && cp -r backend/.ebextensions deploy-backend/ || true"
+
+      # 4. 결과 확인용 로그
       - ls -la deploy-backend/
 
 artifacts:
