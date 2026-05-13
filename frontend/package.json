@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev":   "next dev",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint":  "next lint"
+    "start": "next start -p 8080",
+    "lint": "next lint"
   },
   "dependencies": {
     "next":      "15.5.15",
