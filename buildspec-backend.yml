@@ -6,30 +6,29 @@ phases:
       java: corretto17
   build:
     commands:
-      - echo "Current Directory:" && pwd
-      - cd backend
-      - chmod +x gradlew
-      - ./gradlew bootJar -x test
+      - echo "Building Backend..."
+      - cd backend && chmod +x gradlew && ./gradlew bootJar -x test
   post_build:
     commands:
+      - echo "Preparing Deployment Package..."
+      # 현재 위치가 이미 backend 폴더 안이므로 그 안에 만듭니다.
       - mkdir -p deploy-backend
 
-      # 1. [진단] 전체 디렉토리에서 .jar 파일이 어디에 생성되었는지 출력합니다.
-      - echo "Searching for JAR files..."
-      - find . -name "*.jar"
+      # 1. 현재 위치(backend) 기준 build/libs에서 jar를 찾아 복사
+      - find build/libs/ -name "*.jar" ! -name "*plain.jar" -exec cp {} deploy-backend/note-app.jar \;
 
-      # 2. [복사] 폴더 구조 무시하고 현재 위치에서 가장 가까운 실행 가능 JAR를 복사합니다.
-      # backend 폴더 안으로 들어왔으므로 build/libs/*.jar 를 찾습니다.
-      - cp build/libs/*.jar deploy-backend/note-app.jar || cp backend/build/libs/*.jar deploy-backend/note-app.jar || echo "JAR NOT FOUND"
+      # 2. 현재 위치(backend)에 있는 Procfile 복사
+      - cp Procfile deploy-backend/ || echo "Procfile not found!"
 
-      # 3. Procfile 복사
-      - cp Procfile deploy-backend/ || cp backend/Procfile deploy-backend/ || echo "Procfile NOT FOUND"
+      # 3. .ebextensions 복사 (있을 경우)
+      - "[ -d .ebextensions ] && cp -r .ebextensions deploy-backend/ || true"
 
-      # 4. 결과 확인
+      - echo "Final Check:"
       - ls -la deploy-backend/
 
 artifacts:
   files:
     - '**/*'
-  base-directory: backend/deploy-backend  # backend 폴더 안에서 작업 중이므로 경로 수정
+  # 중요: cd backend 상태에서 만든 폴더이므로 경로를 일치시킵니다.
+  base-directory: backend/deploy-backend
   discard-paths: no
